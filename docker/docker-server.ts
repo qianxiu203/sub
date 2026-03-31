@@ -44,7 +44,7 @@ class NodeD1PreparedStatement {
         private db: Database.Database,
         private query: string,
         private params: any[] = []
-    ) {}
+    ) { }
 
     bind(...params: any[]) {
         return new NodeD1PreparedStatement(this.db, this.query, params);
@@ -99,7 +99,7 @@ class NodeD1PreparedStatement {
 }
 
 class NodeD1 {
-    constructor(private db: Database.Database) {}
+    constructor(private db: Database.Database) { }
 
     prepare(query: string) {
         return new NodeD1PreparedStatement(this.db, query);
@@ -348,7 +348,7 @@ app.get('*', (req: express.Request, res: express.Response, next: express.NextFun
     if (isStaticAsset && pathname !== '/') return next();
 
     // UI Vue Router 前端单页路由白名单，拦截后交由 index.html 处理
-    const frontendRoutes = ['/dashboard', '/subscriptions', '/profiles', '/nodes'];
+    const frontendRoutes = ['/dashboard', '/subscriptions', '/profiles', '/nodes', '/login'];
 
     // 3. 特殊处理：如果是根路径或者是在前端白名单路由内，且没有带 token，则是 UI 访问
     if ((pathname === '/' || frontendRoutes.includes(pathname)) && !hasToken) {

@@ -17,12 +17,13 @@ export async function onRequest(context: EventContext<Env, any, any>) {
         /^\/(assets|@vite|src)\/./.test(url.pathname) || /\.\w+$/.test(url.pathname);
 
     // UI Vue Router 前端单页路由白名单，拦截后交由静态文件（index.html）处理
-    const frontendRoutes = ['/dashboard', '/subscriptions', '/profiles', '/nodes'];
+    const frontendRoutes = ['/dashboard', '/subscriptions', '/profiles', '/nodes', '/login'];
     if (frontendRoutes.includes(url.pathname)) {
-        return next();
+        // 对前端路由返回首页，支持 SPA 刷新
+        return env.ASSETS.fetch(new Request(new URL('/', request.url)));
     }
 
-    if (!isStaticAsset && url.pathname !== '/') {
+    if (!isStaticAsset && url.pathname !== '/' && !url.pathname.startsWith('/sub')) {
         try {
             return await handleSubRequest(context);
         } catch (err: any) {

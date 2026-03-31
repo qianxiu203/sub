@@ -34,6 +34,11 @@ const router = createRouter({
                     component: () => import('@/views/NodesView.vue')
                 }
             ]
+        },
+        // 404 捕获所有未匹配路径
+        {
+            path: '/:pathMatch(.*)*',
+            redirect: '/dashboard'
         }
     ]
 });
