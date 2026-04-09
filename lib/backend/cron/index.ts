@@ -99,11 +99,17 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
     if (updates.size > 0) {
         // 关键修复：再次获取最新数据，应用更新，防止覆盖用户期间的修改
         const latestSubs = (await storage.get<Subscription[]>(KV_KEY_SUBS)) || [];
+        console.log(`[Cron] Fetched ${latestSubs.length} subs from storage, updates map has ${updates.size} entries`);
+        console.log(`[Cron] Update IDs: ${Array.from(updates.keys()).join(', ')}`);
+        console.log(`[Cron] Storage sub IDs: ${latestSubs.map(s => s.id).join(', ')}`);
+        
         let hasChanges = false;
+        let updatedCount = 0;
 
         for (const sub of latestSubs) {
             if (updates.has(sub.id)) {
                 const update = updates.get(sub.id)!;
+                console.log(`[Cron] Applying update to ${sub.name} (ID: ${sub.id}):`, update);
                 if (update.userInfo) {
                     sub.userInfo = update.userInfo;
                     hasChanges = true;
@@ -112,19 +118,22 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
                     sub.nodeCount = update.nodeCount;
                     hasChanges = true;
                 }
+                updatedCount++;
             }
         }
 
+        console.log(`[Cron] Matched and updated ${updatedCount} subscriptions, hasChanges=${hasChanges}`);
+
         if (hasChanges) {
             await storage.put(KV_KEY_SUBS, latestSubs);
-            console.log(`Updated ${updates.size} subscriptions with new info.`);
+            console.log(`[Cron] Saved ${updatedCount} subscriptions to storage`);
 
             // 发送自动更新结果汇总到 TG
             const summaryMsg = 
                 `┏━━━━━━━━━━━━━━━━━━━━━┓\n` +
                 `┃  ⏰ 定时更新报告  ┃\n` +
                 `┗━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
-                `✅ 成功刷新了 \`${updates.size}\` 个订阅的数据\n` +
+                `✅ 成功刷新了 \`${updatedCount}\` 个订阅的数据\n` +
                 `📅 所有订阅节点信息已同步至最新状态`;
             await sendTgNotification(settings as AppConfig, summaryMsg);
         }
